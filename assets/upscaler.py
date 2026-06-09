@@ -9,7 +9,7 @@ class PixelArtUpscaler:
         self.image_path = tk.StringVar()
         self.image_width = tk.IntVar(value=0)
         self.image_height = tk.IntVar(value=0)
-        self.max_width = tk.IntVar(value=160)
+        self.max_width = tk.IntVar(value=240)
         self.max_height = tk.IntVar(value=240)
         self.scale_factor = tk.IntVar(value=32)
         self.output_path = tk.StringVar()
@@ -23,55 +23,120 @@ class PixelArtUpscaler:
         self.main_frame = tk.Frame(root)
         self.main_frame.grid(row=0, column=0)
 
-        self.title_label = tk.Label(
-            self.main_frame,
-            text="Pixel Art Upscaler",
-            font=("Helvetica", 24, "bold")
+        self.title_frame = tk.Frame(self.main_frame)
+        self.title_frame.grid(row=0, column=0, pady=20)
+
+        self.title_label_1 = tk.Label(
+            self.title_frame,
+            text="Pixel",
+            font=("Helvetica", 60, "bold"),
+            fg="red"
         )
-        self.title_label.grid(row=0, column=0)
+        self.title_label_1.grid(row=0, column=0)
+        self.title_label_2 = tk.Label(
+            self.title_frame,
+            text="Art",
+            font=("Helvetica", 60, "bold"),
+            fg="blue"
+        )
+        self.title_label_2.grid(row=0, column=1)
+        self.title_label_3 = tk.Label(
+            self.title_frame,
+            text="Upscaler",
+            font=("Helvetica", 60, "bold"),
+        )
+        self.title_label_3.grid(row=0, column=2)
+
+        self.sub_frame = tk.Frame(self.main_frame)
+        self.sub_frame.grid(row=1, column=0, pady=20)
 
         pixel = tk.PhotoImage(width=1, height=1)
         self.browse_button = tk.Button(
-            self.main_frame,
+            self.sub_frame,
             text="Browse Image",
+            font=("Helvetica", 16),
             image=pixel,
             compound="c",
             command=self.browseImages,
             width=self.max_width.get(),
             height=self.max_height.get()
         )
-        self.browse_button.grid(row=1, column=0)
+        self.browse_button.grid(row=0, column=0, padx=10)
         self.browse_button.image = pixel
 
-        self.scale_entry = tk.Entry(
-            self.main_frame,
-            textvariable=self.scale_factor
-        )
-        self.scale_entry.grid(row=2, column=0)
+        self.side_frame = tk.Frame(self.sub_frame)
+        self.side_frame.grid(row=0, column=1, padx=10)
 
-        self.output_frame = tk.Frame(self.main_frame)
-        self.output_frame.grid(row=3, column=0)
+        self.scale_entry = tk.Entry(
+            self.side_frame,
+            textvariable=self.scale_factor,
+            font=("Helvetica", 16),
+            width=20
+        )
+        self.scale_entry.grid(row=0, column=0, pady=10)
+
+        self.res_frame = tk.Frame(self.side_frame)
+        self.res_frame.grid(row=1, column=0, pady=10)
+
+        self.before_label = tk.Label(
+            self.res_frame,
+            text="Original Resolution: ",
+            font=("Helvetica", 16),
+            anchor="e",
+            justify="right",
+            width=18
+        )
+        self.before_label.grid(row=0, column=0)
+        self.before_res = tk.Label(
+            self.res_frame,
+            text="0 X 0",
+            font=("Helvetica", 16),
+            fg="red",
+            anchor="w",
+            justify="left",
+            width=12
+        )
+        self.before_res.grid(row=0, column=1)
+
+        self.after_label = tk.Label(
+            self.res_frame,
+            text="New Resolution: ",
+            font=("Helvetica", 16),
+            anchor="e",
+            justify="right",
+            width=18
+        )
+        self.after_label.grid(row=1, column=0)
+        self.after_res = tk.Label(
+            self.res_frame,
+            text="0 X 0",
+            font=("Helvetica", 16),
+            fg="green",
+            anchor="w",
+            justify="left",
+            width=12
+        )
+        self.after_res.grid(row=1, column=1)
 
         self.output_button = tk.Button(
-            self.output_frame,
+            self.side_frame,
             text="Choose Output Folder",
-            command=self.chooseOutputFolder
+            font=("Helvetica", 16),
+            command=self.chooseOutputFolder,
+            width=20,
+            height=2
         )
-        self.output_button.grid(row=0, column=0)
-
-        self.output_label = tk.Label(
-            self.output_frame,
-            text="/",
-            font=("Helvetica", 12, "bold")
-        )
-        self.output_label.grid(row=0, column=1)
+        self.output_button.grid(row=2, column=0, pady=10)
 
         self.upscale_button = tk.Button(
-            self.main_frame,
+            self.side_frame,
             text="Upscale",
-            command=self.upscaleImage
+            font=("Helvetica", 16),
+            command=self.upscaleImage,
+            width=20,
+            height=2
         )
-        self.upscale_button.grid(row=4, column=0)
+        self.upscale_button.grid(row=3, column=0, pady=10)
 
     def browseImages(self):
         image_path = filedialog.askopenfilename(
@@ -129,6 +194,15 @@ class PixelArtUpscaler:
         )
         self.browse_button.image = photo
 
+        self.before_res.config(
+            text=str(self.image_width.get()) + " X " + str(self.image_height.get())
+        )
+
+        (output_width, output_height) = self.getOutputDimensions()
+        self.after_res.config(
+            text=str(output_width) + " X " + str(output_height)
+        )
+
         return 0
 
     def chooseOutputFolder(self):
@@ -139,8 +213,8 @@ class PixelArtUpscaler:
 
         self.output_path.set(output_path)
 
-        self.output_label.config(
-            text=self.output_path.get()
+        self.output_button.config(
+            text=self.output_path.get()[:10] + "..." + self.output_path.get()[-10:] if len(self.output_path.get()) > 20 else self.output_path.get()
         )
 
         return 0
