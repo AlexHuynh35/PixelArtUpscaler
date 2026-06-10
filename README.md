@@ -17,12 +17,11 @@ This app takes a pixel art sprite and upscales it to a higher resolution.
 ## How to Use
 
 - To run the app:
-    - Clone this repository
+    - Fork this repository
     - Install requirements (Pillow)
     - Launch the app
 
 - To use the app:
-    - Browse and select an image to upscale
-    - Enter a scale factor
-    - Verify output resolution
-    - Click upscale
+    - Browse and select image to upscale
+    - Enter scale factor and verify output resolution
+    - Pick where to put output and click upscale

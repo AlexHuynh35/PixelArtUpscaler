@@ -43,26 +43,42 @@ class PixelArtUpscaler:
         self.title_label_3 = tk.Label(
             self.title_frame,
             text="Upscaler",
-            font=("Helvetica", 60, "bold"),
+            font=("Helvetica", 60, "bold")
         )
         self.title_label_3.grid(row=0, column=2)
 
         self.sub_frame = tk.Frame(self.main_frame)
         self.sub_frame.grid(row=1, column=0, pady=20)
 
-        pixel = tk.PhotoImage(width=1, height=1)
-        self.browse_button = tk.Button(
+        self.browse_canvas = tk.Canvas(
             self.sub_frame,
-            text="Browse Image",
-            font=("Helvetica", 16),
-            image=pixel,
-            compound="c",
-            command=self.browseImages,
             width=self.max_width.get(),
             height=self.max_height.get()
         )
-        self.browse_button.grid(row=0, column=0, padx=10)
-        self.browse_button.image = pixel
+        self.browse_canvas.grid(row=0, column=0, padx=10)
+
+        self.browse_border = self.browse_canvas.create_rectangle(
+            4,
+            4,
+            self.max_width.get() - 4,
+            self.max_height.get() - 4,
+            dash=(4, 4)
+        )
+        self.browse_text = self.browse_canvas.create_text(
+            self.max_width.get() / 2,
+            self.max_height.get() / 2,
+            text="Browse Image",
+            font=("Helvetica", 16),
+        )
+        self.browse_image = self.browse_canvas.create_image(
+            self.max_width.get() / 2,
+            self.max_width.get() / 2,
+            anchor="center"
+        )
+        self.browse_button = self.browse_canvas.bind(
+            "<Button-1>",
+            lambda e: self.browseImages()
+        )
 
         self.side_frame = tk.Frame(self.sub_frame)
         self.side_frame.grid(row=0, column=1, padx=10)
@@ -188,11 +204,20 @@ class PixelArtUpscaler:
         )
 
         photo = ImageTk.PhotoImage(bg_img)
-        self.browse_button.config(
-            text="",
+        self.browse_canvas.itemconfig(
+            self.browse_image,
             image=photo
         )
-        self.browse_button.image = photo
+        self.browse_canvas.image = photo
+        self.browse_canvas.itemconfig(
+            self.browse_text,
+            text=""
+        )
+        self.browse_canvas.itemconfig(
+            self.browse_border,
+            fill="white",
+            dash=()
+        )
 
         self.before_res.config(
             text=str(self.image_width.get()) + " X " + str(self.image_height.get())
