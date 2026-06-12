@@ -12,6 +12,7 @@ class PixelArtUpscaler:
         self.max_width = tk.IntVar(value=240)
         self.max_height = tk.IntVar(value=240)
         self.scale_factor = tk.IntVar(value=32)
+        self.scale_factor.trace_add("write", self.onScaleChange)
         self.output_path = tk.StringVar()
 
         self.createApp(root)
@@ -75,7 +76,7 @@ class PixelArtUpscaler:
             self.max_width.get() / 2,
             anchor="center"
         )
-        self.browse_button = self.browse_canvas.bind(
+        self.browse_canvas.bind(
             "<Button-1>",
             lambda e: self.browseImages()
         )
@@ -83,13 +84,20 @@ class PixelArtUpscaler:
         self.side_frame = tk.Frame(self.sub_frame)
         self.side_frame.grid(row=0, column=1, padx=10)
 
+        vcmd = (root.register(self.onScaleValidate))
         self.scale_entry = tk.Entry(
             self.side_frame,
             textvariable=self.scale_factor,
             font=("Helvetica", 16),
-            width=20
+            width=20,
+            validate='all',
+            validatecommand=(vcmd, '%P')
         )
         self.scale_entry.grid(row=0, column=0, pady=10)
+        self.scale_entry.bind(
+            "<Return>",
+            lambda e: self.updateScale()
+        )
 
         self.res_frame = tk.Frame(self.side_frame)
         self.res_frame.grid(row=1, column=0, pady=10)
@@ -223,12 +231,21 @@ class PixelArtUpscaler:
             text=str(self.image_width.get()) + " X " + str(self.image_height.get())
         )
 
+        self.updateScale()
+
+        return 0
+
+    def onScaleValidate(self, P):
+        return str.isdigit(P) or P == ""
+
+    def onScaleChange(self, *args):
+        self.updateScale()
+
+    def updateScale(self):
         (output_width, output_height) = self.getOutputDimensions()
         self.after_res.config(
             text=str(output_width) + " X " + str(output_height)
         )
-
-        return 0
 
     def chooseOutputFolder(self):
         output_path = filedialog.askdirectory(parent=self.root)
@@ -253,8 +270,8 @@ class PixelArtUpscaler:
 
         upscaled = img.resize(
             (
-                img.width * self.scale_factor.get(),
-                img.height * self.scale_factor.get()
+                img.width * self.getScaleFactor(),
+                img.height * self.getScaleFactor()
             ),
             Image.NEAREST
         )
@@ -272,8 +289,15 @@ class PixelArtUpscaler:
 
         return 0
 
+    def getScaleFactor(self):
+        try:
+            scale = self.scale_factor.get() 
+            return scale if scale >= 1 else 1
+        except tk.TclError:
+            return 1
+
     def getOutputDimensions(self):
         return (
-            self.image_width.get() * self.scale_factor.get(),
-            self.image_height.get() * self.scale_factor.get()
+            self.image_width.get() * self.getScaleFactor(),
+            self.image_height.get() * self.getScaleFactor()
         )
